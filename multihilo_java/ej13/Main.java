@@ -11,7 +11,8 @@ public class Main {
 		for(int i = 0; i<NUM_CI; i++) {
 			suma+=launchProcess(String.valueOf((int)(Math.random()*51)+50));
 		}
-		System.out.println((double)(suma)/NUM_CI);
+		
+		System.out.println("La media es: "+(double)(suma)/NUM_CI);
 	}
 	
 	public static Integer launchProcess(String ciudad) {
