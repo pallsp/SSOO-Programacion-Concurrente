@@ -1,0 +1,209 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{blindtext}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{latexsym}
+\usepackage{cancel}
+\usepackage[left=2cm,top=2cm,right=2cm,bottom=2cm]{geometry}
+\usepackage[all]{xy}
+\usepackage{cancel}
+\usepackage{pictexwd}
+\usepackage{parskip}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.15}
+\usepackage{mathrsfs}
+\usepackage{vmargin}
+\usepackage{graphicx}
+\usepackage{tikz-cd}
+%activar hyperref para moverse rápidamente en el documento, desactivar para visualizar o imprimir
+%\usepackage{hyperref} 
+
+\DeclarePairedDelimiter\Floor\lfloor\rfloor
+\DeclarePairedDelimiter\Ceil\lceil\rceil
+
+
+\newtheorem{theorem}{Teorema}[section]
+\newtheorem{definicion}[theorem]{Definición}
+\newtheorem{proposition}[theorem]{Proposición}
+\newtheorem{lemma}{Lema}[theorem]
+\newtheorem{definition}[theorem]{Definición}
+\newtheorem{example}{Ejemplo}[theorem]
+\newtheorem{corolario}{Corolario}[theorem]
+\newtheorem{observation}{Observación}[theorem]
+\newtheorem{properties}{Propiedades}[theorem]
+\newtheorem{exercise}{Ejercicio}
+\providecommand{\abs}[1]{\lvert#1\rvert}
+\providecommand{\norm}[1]{\lVert#1\rVert}
+\graphicspath{{images/}}
+
+\author{Pablo Pallàs}
+\title{Fundamentos de Sistemas Operativos}
+\setlength{\parindent}{10pt}
+\newpage
+\begin{document}
+\rmfamily
+\maketitle
+\vspace{2.5cm}
+\tableofcontents
+\parindent= 0cm
+\newpage
+\section{Consideraciones generales de los sistemas operativos}
+\subsection{Definición y objetivos}
+
+
+Un sistema operativo es una capa de software que gestiona de forma eficiente todos los dispositivos
+hardware de un computador y además suministra a los usuarios una interfaz cómoda con el hardware.
+
+Los principales objetivos de un sistema operativo son: 
+
+\begin{enumerate}
+\item \textbf{\textit{Gestionar o administrar eficientemente los dispositivos hardware de un computador}}. El sistema
+operativo se encarga de decidir cuánto tiempo de ejecución en el procesador se asigna a los pro-
+gramas de los usuarios. El sistema operativo dispone de un módulo denominado planificador que
+se encarga de esta tarea
+\item \textbf{\textit{Administrar, junto con el hardware, la ocupación de la memoria principal}}. Recuérdese que para que un programa pueda ser ejecutado por el procesador, primero debe encontrarse cargado en la memoria principal. Además puesto que la memoria principal es un recurso finito, el número de programas que pueden encontrarse cargados en la memoria principal preparados para ser ejecutados por el procesador está limitado.
+
+También se \textbf{\textit{encarga de gestionar la memoria secundaria}}. Desde un punto de
+vista interno, controla el espacio del área de intercambio, donde se almacenan aquellos programas
+que hay que ejecutar pero para los cuales no existe todavía espacio en la memoria principal, y
+el espacio de los sistemas de archivos. Por otra parte, desde un punto de vista lógico, controla el
+acceso y el uso de los sistemas de archivos. Finalmente, el sistema operativo gestiona el acceso a
+los restantes dispositivos de E/S.
+
+\item \textbf{\textit{Ofrecer a los usuarios una interfaz cómoda con el hardware que les facilite el uso del computador}}. El sistema operativo proporciona al usuario una máquina extendida, también denominada máquina virtual, que es más fácil de programar que el hardware desnudo. Por sistema informático entendemos al conjunto formado por el hardware de un computador, el software que se puede ejecutar en él y los seres humanos (diseñadores del sistema operativo, programadores y usuarios). En el nivel más interno se encuentra el hardware del computador. A continuación en el siguiente nivel se sitúa el núcleo (kernel) del sistema operativo, que oculta el hardware a los programadores de los siguientes niveles, suministrando un conjunto de instrucciones denominadas \textbf{\textit{llamadas al sistema}} con el que los programas ubicados en los niveles superiores pueden solicitar los servicios del núcleo. Sobre el núcleo se sitúa el nivel formado por los programas de utilidades del sistema operativo: intérpretes de comandos, sistemas de ventanas, compiladores, editores y programas similares independientes de las aplicaciones. Realmente estos programas de utilidades no son parte imprescindible para el funcionamiento del sistema operativo, aunque se suministran conjuntamente con él para hacer más amigable su uso a los programadores y a los usuarios. Finalmente, en el último nivel se sitúan los programas de aplicación, como por ejemplo, navegadores, programas de gestión del
+correo electrónico, bases de datos, procesadores de texto, hojas de cálculo, etc. Debe quedar claro que los programas de aplicaciones no tienen por qué hacer uso de las utilidades del sistema operativo para poder solicitar los servicios del núcleo, ya que también pueden usar directamente las llamadas al sistema.
+\end{enumerate}
+
+En cuanto a los servicios proporcionados por un sistema operativo, encontramos:
+
+\begin{enumerate}
+\item \textbf{\textit{Ejecución de programas}}. Un sistema operativo debe ser capaz de cargar en la memoria principal un programa desde su ubicación original en la memoria secundaria y ejecutarlo.
+\item \textbf{\textit{Acceso a los dispositivos de E/S}}. Existen diferentes tipos de dispositivos de E/S, cada uno de los cuales para su funcionamiento utiliza su propio conjunto de instrucciones o \textbf{\textit{señales de control}}. El sistema operativo oculta los detalles particulares de cada dispositivo proporcionando una interfaz uniforme de forma que los usuarios puedan acceder a los dispositivos de E/S utilizando un conjunto sencillo de instrucciones de lectura y escritura.
+
+\item \textbf{\textit{Manipulación del sistema de archivos}}. De forma general, un archivo o fichero se puede definir como una secuencia de bits, bytes, líneas o registros cuyo significado es definido por su creador. Los archivos se almacenan en los diferentes dispositivos de almacenamiento secundario de acuerdo con un determinado esquema de almacenamiento denominado sistema de archivos. Para
+muchos usuarios, el sistema de archivos es el aspecto más visible de un sistema operativo, ya que
+proporciona una estructura lógica para el almacenamiento de sus archivos. El sistema operativo
+debe ser capaz de gestionar el acceso al sistema de archivos para que los usuarios puedan realizar
+operaciones tales como la creación, eliminación, lectura o escritura de archivos. Para ello debe mantener información del tipo de dispositivo de E/S donde se encuentra almacenado un archivo y de
+la estructura de los datos de dicho archivo.
+
+\item \textbf{\textit{Comunicación y sincronización}}. El sistema operativo debe soportar diferentes tipos de mecanismos de comunicación y sincronización (memoria compartida, paso de mensajes, semáforos, envío de señales, $\ldots$) entre los programas, ya que existen muchas situaciones en las que un programa necesita intercambiar datos con otros programas o sincronizar su ejecución con la aparición de algún evento.
+
+\item \textbf{\textit{Detección y respuesta a errores}}. El sistema operativo debe ser capaz de detectar los posibles errores que se puedan producir durante el funcionamiento del sistema informático donde reside. Los errores se pueden producir en el hardware (como un fallo en el suministro de energía, errores de memoria, sector en disco defectuoso, falta de papel en una impresora, ... ), o ser generados por el software en ejecución (acceso a una posición de memoria prohibida, división por cero, imposibilidad de conceder el uso de un recurso o aplicación, $\ldots$).
+
+Además, el sistema operativo debe proporcionar una respuesta adecuada al error producido, por ejemplo, informando al usuario del error aparecido, finalizar el programa que produjo el error o reintentar la operación que originó el error.
+
+\item \textbf{\textit{Protección y seguridad}}. Cuando se ejecutan varios programas concurrentemente, se debe evitar que un programa interfiera con los demás. Así, el sistema operativo debe asegurar un acceso controlado y protegido a los recursos del computador. Por otra parte, en sistemas informáticos multiusuario, el sistema operativo debe disponer de medidas de seguridad para regular
+el acceso únicamente a los usuarios autorizados. Típicamente cuando un usuario desea acceder al
+sistema se debe acreditar indicando su nombre de usuario (login) y su contraseña (password).
+
+\item \textbf{\textit{Contabilidad}}. Un sistema operativo debe llevar registros o estadísticas del uso de los diferentes recursos del computador y monitorizar parámetros tales como la productividad o el tiempo de respuesta. Esta información puede resultar muy útil para mejorar el rendimiento del sistema informático y para facturar a los usuarios.
+\end{enumerate} 
+
+\subsection{Evolución e historia de los sistemas operativos}
+
+Multiprogramación: técnica que consiste en mantener en la memoria principal varios trabajos simultáneamente. Si el trabajo que se está ejecutando actualmente en el procesador requiere de la realización de una operación de E/S, mientras se completa dicha operación el procesador puede ejecutar otro trabajo. De esta forma se consigue aumentar el rendimiento del procesador.
+
+Tiempo compartido: técnica en la que el uso del procesador se comparte entre los trabajos de múltiples usuarios. En un sistema informático de tiempo compartido, múltiples usuarios se comunican simultáneamente con el computador a través de terminales serie. Una \textbf{\textit{terminal serie}} es un dispositivo de E/S que consta de un teclado y de una pantalla, y que se comunica con el computador mediante una línea serie, por la cuál la información se transmite bit a bit. Cada usuario introduce desde su terminal una orden y espera por la respuesta. En todo momento, un usuario cree que es el único que está interaccionando con el computador y que tiene a su disposición todos sus recursos.
+
+En un \textbf{\textit{sistema operativo en red}} un usuario en un computador conoce la existencia de los otros computadores conectados en red y puede interactuar con dichas máquinas para acceder a sus contenidos. En un \textbf{\textit{sistema operativo distribuido}} un usuario no percibe la existencia de otras máquinas y cuando ejecuta un programa no sabe si se está ejecutando en el procesador de su máquina o en de otra de la red, lo mismo se aplica al almacenamiento de archivos.
+
+\subsection{Tipos de sistemas operativos}
+
+Distinguimos: 
+\begin{enumerate}
+\item En función del número de usuarios que se pueden atender simultáneamente:
+\begin{enumerate}
+\item \textbf{\textit{Sistemas operativos multiusuario}}. Si se pueden atender a múltiples usuarios. Cada usuario trabaja con el sistema sin percibir que existen otros usuarios conectados. Por ejemplo: UNIX, Windows Server y Linux.
+
+\item \textbf{\textit{Sistemas operativos monousuario}}. Sólo pueden atender a un único usuario simultáneamente. Por ejemplo: MS-DOS, Windows y Mac OS.
+
+\end{enumerate}
+\item Según el número de programas cargados en la memoria principal:
+\begin{enumerate}
+\item \textbf{\textit{Sistema operativo monoprogramado o con monoprogramación}}, en la memoria principal del computador se almacena el sistema operativo y un único programa de usuario, que tiene a su disposición todos los recursos del computador. El procesador ejecuta dicho programa ininterrumpidamente desde su inicio hasta su finalización. Cuando finaliza dicho programa se carga otro programa en memoria que pasa a ser ejecutado. Por ejemplo: MS-DOS.
+
+\item \textbf{\textit{Sistema operativo multiprogramado o con multiprogramación}}, en la memoria principal se almacenan, aparte del sistema operativo, varios programas, que deben compartir durante su ejecución los recursos del computador. Si un programa cualquiera está siendo ejecutado en el procesador, el sistema operativo puede interrumpir su ejecución para ejecutar otro programa cargado en la memoria principal. Posteriormente, la ejecución del primer programa puede ser reanudada.
+
+Para implementar la multiprogramación, el sistema operativo debe ser capaz de gestionar el uso de los recursos del computador entre todos los programas. Para ello debe disponer de algoritmos de planificación, mecanismos de sincronización y mecanismos de asignación y protección de la memoria principal y de la memoria secundaria. También es necesario que el hardware soporte mecanismos de protección de la memoria, E/S controlada por interrupciones y DMA.
+
+El uso de la multiprogramación permite disminuir los tiempos de finalización de los programas y aumentar el uso de los recursos del sistema. Sin embargo, conviene tener presente que existe un límite máximo del grado de multiprogramación por encima del cual el rendimiento del sistema disminuye.
+
+Aclarar algunas posibles cuestiones relativas a la multiprogramación. Se suele usar el término multitarea como sinónimo de multiprogramación. Un sistema operativo multitarea puede ser multiusuario (UNIX, Linux, Windows Server, etc.) o monousuario (Windows XP, Mac OS, etc.). Se dice que un sistema operativo es multiacceso, si permite el acceso al sistema informático a través de dos o más terminales. El multiacceso no requiere necesariamente la existencia de multiprogramación. Un sistema operativo con multiprocesamiento es aquel que es capaz de coordinar la actividad de varios procesadores simultáneamente. Este tipo de sistemas operativos son sistemas multitarea por definición ya que soportan la ejecución de varios programas sobre diferentes procesadores.
+\end{enumerate}
+\item En función de los requisitos temporales de los programas a ejecutar: 
+\begin{enumerate}
+\item \textbf{\textit{Sistemas operativos por lotes o sistemas batch}}. En estos sistemas los trabajos se procesan agrupados en lotes de trabajos con necesidades similares. Cada trabajo consta típicamente del programa a ejecutar, los datos necesarios y órdenes para el sistema operativo. El tipo de trabajos que se suelen
+ejecutar en estos sistemas son aquéllos que requieren un tiempo de ejecución grande, típicamente minutos u horas, y que además necesitan de poca o nula interacción con lo usuarios, como por ejemplo: análisis estadísticos, gestión de nóminas, etc.
+
+\item \textbf{\textit{Sistemas operativos de tiempo compartido o sistemas interactivos}}. Son sistemas multiusuario con
+multiprogramación donde cada usuario introduce desde su terminal una orden, bien mediante el uso del teclado o del ratón, y espera por la respuesta del sistema operativo. En todo momento, gracias a la multiprogramación, un usuario cree ser el único que está interaccionando con el computador y tener a su disposición todo sus recursos. Las aplicaciones que se suelen ejecutar en estos sistemas son programas que requieren un tiempo de respuesta pequeño, típicamente menores de un segundo, ya que en caso contrario el usuario pensará que el sistema es insensible a su acciones. Ejemplo de aplicaciones interactivas son: los intérpretes de comandos, los editores y las aplicaciones con GUI.
+
+\item \textbf{\textit{Sistemas operativos de tiempo real}}. Son sistemas con multiprogramación que soportan aplicaciones de tiempo real, que son aquellas que reciben unas entradas procedentes de unos sensores externos, a través de unas tarjetas de adquisición de datos, y deben generar unas salidas en un tiempo de respuesta preestablecido. Tales aplicaciones de tiempo real se usan en experimentos científicos, control industrial, robótica, sistemas de control de vuelo, simulaciones, telecomunicaciones, dispositivos multimedia, etc. Se pueden clasificar en dos tipos: aplicaciones de tiempo real estrictas y aplicaciones de tiempo real suaves. Las aplicaciones de tiempo real estrictas son aquellas donde es necesario que sus tareas asociadas se completen siempre en un límite preestablecido de tiempo de respuesta, como por ejemplo, aplicaciones de tiempo real para control industrial o robótica. Las aplicaciones de tiempo real suaves son aquellas que permiten sobrepasar en algunas
+ocasiones dicho límite de tiempo de respuesta, como por ejemplo aplicaciones de tiempo real para multimedia o realidad virtual.
+
+\item \textbf{\textit{Sistemas operativos híbridos}}. Son aquellos sistemas operativos con capacidad para soportar tanto
+trabajos por lotes como aplicaciones interactivas o incluso aplicaciones suaves de tiempo real. Normalmente se asigna a los trabajos por lotes una prioridad de ejecución más pequeña que a las
+aplicaciones interactivas, y a éstas una prioridad de ejecución menor que a las aplicaciones suaves de tiempo real. Así, los trabajos por lotes se ejecutan cuando el procesador no tiene que ejecutar aplicaciones interactivas, y éstas cuando no hay que ejecutar aplicaciones suaves de tiempo real. Ejemplos de sistemas operativos híbridos son UNIX y Linux.
+\end{enumerate}
+\item En función de la finalidad del computador:
+\begin{enumerate}
+\item \textbf{\textit{Sistemas operativos para macrocomputadores}}.
+\item \textbf{\textit{Sistemas operativos para servidores de red}}.
+\item \textbf{\textit{Sistemas operativos para computadores personales}}.
+\item \textbf{\textit{Sistemas operativos para computadores de mano}}.
+\item \textbf{\textit{Sistemas operativos integrados}}.
+\end{enumerate}
+\end{enumerate}
+
+\subsection{Llamadas al sistema}
+
+La mayoría de los procesadores disponen de dos modos de ejecución: \textbf{\textit{modo núcleo}} o \textbf{\textit{supervisor}} y \textbf{\textit{modo usuario}}. Un programa ejecutándose en modo núcleo puede ejecutar cualquier instrucción del repertorio de instrucciones del procesador y, en consecuencia, acceder a todas las características del hardware. Por el contrario, un programa ejecutándose en modo usuario solo puede ejecutar un conjunto limitado de instrucciones del repertorio del procesador, con lo que tiene limitado el acceso al hardware. Típicamente las instrucciones privilegiadas no se pueden ejecutar en modo usuario, solo en modo supervisor. El sistema operativo siempre se ejecuta en modo núcleo, lo cual le da un acceso completo al hardware. Por su parte, los programas de los usuarios (aquellos creados por el propio usuario, programas de aplicación o programas de utilidades distribuidos junto con el sistema operativo) se ejecutan en modo usuario y su acceso al hardware está restringido. Para poder usar los recursos hardware, los programas de usuario deben solicitar su uso al sistema operativo mediante la realización de \textbf{\textit{llamadas al sistema}}, que conforman la interfaz entre los programas de usuario y el núcleo.
+
+Cada sistema operativo tiene su propio conjunto de llamadas al sistema, aunque los conceptos que subyacen en todos ellos suelen ser bastante parecidos. Típicamente los programas de usuario pueden invocar a las llamdas al sistema de dos formas: 
+
+\begin{enumerate}
+\item \textbf{\textit{Mediante el uso de librerías de llamadas al sistema}}. En este caso las llamadas al sistema se invocan de forma similar a como se invoca a cualquier función de un programa escrito en un lenguaje de alto nivel. Existen librerías de llamadas al sistema que trasladan estas llamadas a las funciones primitivas necesarias que permiten acceder al núcleo. Estas librerías se enlazan por defecto con el código de los programas en tiempo de compilación, formando así parte del archivo objeto asociado al programa.
+
+\item \textbf{\textit{De forma directa}}. Los programas escritos directamente en lenguaje ensamblador pueden invocar a las llamadas al sistema de forma directa sin necesidad de una librería de llamadas al sistema.
+\end{enumerate} 
+
+Cuando un programa de usuario invoca a una llamada al sistema se produce una \textit{trampa}, que provoca la conmutación hardware de modo usuario a modo supervisor y transfiere el control al núcleo. El núcleo examina el identificador numérico de la llamada (cada llamada tiene asignado uno) y los parámetros de la llamada para poder localizar y ejecutar a la rutina del núcleo asociada a la llamada al sistema. Cuando dicha rutina finaliza, almacena el resultado en algún registro y provoca la conmutación hardware de modo supervisor a modo usuario para que el proceso de usuario que invocó la llamada continúe su ejecución.
+
+Tal y como se ha mencionado, el núcleo necesita acceder a los parámetros de la llamada al sistema. Existen varias formas de pasar estos parámetros al núcleo:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
