@@ -1,3 +1,4 @@
+
 import java.util.ArrayList;
 
 public class Juego {
@@ -10,7 +11,7 @@ public class Juego {
 		//this.listaGanados = new ArrayList<>();
 	}
 	
-	public synchronized String compare() {
+	public synchronized Integer compare() {
 		while(num1 == null || num2 == null) {
 			try {
 				wait();
@@ -21,13 +22,16 @@ public class Juego {
 		
 		System.out.println("Números: "+num1+", "+num2);
 		if(num1>num2) {
-			return "Ha ganado el jugador 1";
+			//return "Ha ganado el jugador 1";
+			return 1;
 		}
 		else if(num1==num2) {
-			return "Empate";
+			//return "Empate";
+			return 0;
 		}
 		else {
-			return "Ha ganado el jugador 2";
+			//return "Ha ganado el jugador 2";
+			return 2;
 		}
 	}
 	

@@ -1,3 +1,4 @@
+
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -15,21 +16,9 @@ public class Servidor {
 			System.out.println("Servidor esperando en el puerto "+PUERTO);
 			for(int i=0;i<2;i++) {
 				Socket cliente = server.accept(); //crea el objeto
-				ClienteHandler ch = new ClienteHandler(i,cliente,j);
+				ClienteHandler ch = new ClienteHandler(i+1,cliente,j);
 				ch.start();	
 			}
-			
-			/*
-			 if(j.getRes()==1) {
-				System.out.println("Gana jugador 1");
-			}
-			else if(j.getRes()==2) {
-				System.out.println("Gana jugador 2");
-			}
-			else {
-				System.out.println("empate");
-			}
-			 */
 			
 		} catch (IOException e) {
 			e.printStackTrace();
