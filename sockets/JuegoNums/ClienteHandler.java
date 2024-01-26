@@ -1,3 +1,4 @@
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -24,7 +25,7 @@ public class ClienteHandler extends Thread{
 				DataInputStream in = new DataInputStream(cliente.getInputStream());){
 			int numero = in.readInt();
 			
-			if(nCliente == 0) {
+			if(nCliente == 1) {
 				System.out.println("Número leído de jugador 1: "+numero);
 				j.setNum1(numero);
 			}
@@ -33,8 +34,11 @@ public class ClienteHandler extends Thread{
 				j.setNum2(numero);
 			}
 			
-			System.out.println(j.compare());
-			//out.writeUTF(j.compare());
+			//System.out.println(j.compare());
+			if(j.compare() == nCliente)
+				out.writeUTF("Enhorabuena, has ganado");
+			else
+				out.writeUTF("Lo siento, has perdido");
 			
 		} catch (IOException e) {
 			e.printStackTrace();
