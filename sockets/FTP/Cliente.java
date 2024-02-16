@@ -18,7 +18,7 @@ import java.util.Scanner;
 
 public class Cliente {
 	private static final int PUERTO = 5000;
-	private static final String HOST = "localhost"; //192.168.0.22
+	private static final String HOST = "192.168.0.22"; //192.168.0.22
 	private String mensaje;
 
 	public Cliente() {
@@ -39,31 +39,32 @@ public class Cliente {
 				option = sc.nextInt();
 				sc.nextLine();
 				switch (option) {
-				case 0:
-					System.out.println("Saliendo..");
-					break;
-				case 1:
-					System.out.println("Has elegido registrar un nuevo usuario");
-					salida.println("REGISTRO"); // 0-envío registro
-					salida.flush();
-					// salida.close();
-					mensaje = entrada.readLine(); // 1-recibo mensaje de registrar usuario
-					System.out.println(mensaje);
-					registrarUsuario(salida); // 2-envío credenciales
-					break;
-				case 2:
-					System.out.println("Has elegido acceder al servidor");
-					salida.println("SERVIDOR");
-					salida.flush();
-					mensaje = entrada.readLine();
-					System.out.println(mensaje);
-					autenticarUsuario(salida);
-					mensaje = entrada.readLine();
-					System.out.println(mensaje);
-					acciones(s, entrada, salida);
-					break;
-				default:
-					System.out.println("Opción no válida.");
+					case 0:
+						System.out.println("Saliendo..");
+						salida.println("SALIR");
+						salida.flush();
+						break;
+					case 1:
+						System.out.println("Has elegido registrar un nuevo usuario");
+						salida.println("REGISTRO"); // 0-envío registro
+						salida.flush();
+						mensaje = entrada.readLine(); // 1-recibo mensaje de registrar usuario
+						System.out.println(mensaje);
+						registrarUsuario(salida); // 2-envío credenciales
+						break;
+					case 2:
+						System.out.println("Has elegido acceder al servidor");
+						salida.println("SERVIDOR");
+						salida.flush();
+						mensaje = entrada.readLine();
+						System.out.println(mensaje);
+						autenticarUsuario(salida);
+						mensaje = entrada.readLine();
+						System.out.println(mensaje);
+						acciones(s, entrada, salida);
+						break;
+					default:
+						System.out.println("Opción no válida.");
 				}
 			} while (option != 0);
 
@@ -89,13 +90,16 @@ public class Cliente {
 			switch (option) {
 			case 0:
 				System.out.println("Saliendo..");
+				salida.println("0");
+				salida.flush();
 				break;
 			case 1: // listar archivos
 				System.out.println("LOS ARCHIVOS DEL SERVIDOR: ");
 				salida.println("1");
 				salida.flush();
-				try {
-					mensaje = entrada.readLine();
+				try {			
+					DataInputStream dis = new DataInputStream(s.getInputStream());
+					mensaje = dis.readUTF();
 					System.out.println(mensaje);
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -114,19 +118,22 @@ public class Cliente {
 				System.out.println("SE BAJARÁ UN ARCHIVO: ");
 				salida.println("3"); // 1-envío opción
 				salida.flush();
+				DataInputStream dis;
 				try {
-					mensaje = entrada.readLine(); //1.5-recibimos los archivos que hay en el servidor
+					dis = new DataInputStream(s.getInputStream()); 
+					mensaje = dis.readUTF(); //1.5-recibimos los archivos que hay en el servidor
 					System.out.println(mensaje);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 				System.out.println("Seleccione un archivo a descargar: (introduzca el nombre)");
 				archivo = sc.nextLine();
-				salida.print(archivo); // 2-envío nombre archivo a descargar
+				salida.println(archivo); // 2-envío nombre archivo a descargar
 				salida.flush();
 				try {
-					mensaje = entrada.readLine(); // 3-recibo el tamaño del archivo, que parsearé a un entero
-					receiveFile(s, Integer.parseInt(mensaje), archivo); // 4-recibo el archivo
+					dis = new DataInputStream(s.getInputStream());
+					int tam = dis.readInt(); //3-recibo el tamaño del archivo
+					receiveFile(s, tam, archivo); // 4-recibo el archivo
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -139,7 +146,7 @@ public class Cliente {
 
 	private void receiveFile(Socket server, Integer sizeArchivo, String nombreArchivo) {
 		try{
-			FileOutputStream fos = new FileOutputStream("/home/pablo/FTP/servidorFTP/"+nombreArchivo);
+			FileOutputStream fos = new FileOutputStream("/home/pablo/FTP/clienteFTP/"+nombreArchivo);
 			BufferedOutputStream out = new BufferedOutputStream(fos);
 			BufferedInputStream in = new BufferedInputStream(server.getInputStream());
 			byte[] buffer = new byte[sizeArchivo];
@@ -227,35 +234,3 @@ public class Cliente {
 	}
 
 }
-
-
-
-
-
-
-
-
-/*
-antiguo receiveFile()
-try (FileOutputStream fos = new FileOutputStream("/home/pablo/FTP/clienteFTP/" + nombreArchivo);
-				BufferedOutputStream bos = new BufferedOutputStream(fos);
-				InputStream is = server.getInputStream();) {
-			byte[] miByteArray = new byte[sizeArchivo];
-			int bytesLeidos = is.read(miByteArray, 0, miByteArray.length);
-			int bytesTotales = bytesLeidos;
-			while (bytesTotales < sizeArchivo) {
-				bytesLeidos = is.read(miByteArray, bytesTotales, (miByteArray.length - bytesTotales));
-				if (bytesLeidos >= 0)
-					bytesTotales += bytesLeidos;
-			}
-			bos.write(miByteArray, 0, bytesTotales);
-			bos.flush();
-			System.out.println(nombreArchivo + " descargado con éxito.");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-
-
-
-*/
