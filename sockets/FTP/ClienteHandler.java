@@ -30,7 +30,7 @@ public class ClienteHandler extends Thread{
 	public void run() {
 		try(InputStream is = cliente.getInputStream(); 
 				BufferedReader entrada = new BufferedReader(new InputStreamReader(is)); OutputStream os = cliente.getOutputStream();
-				PrintStream salida = new PrintStream(os);){
+				PrintStream salida = new PrintStream(os);DataInputStream dis = new DataInputStream(cliente.getInputStream())){
 			System.out.println("Cliente: "+direccion+" conectado");
 			String mensaje = entrada.readLine(); //0-recibo accion
 			if(mensaje.equals("REGISTRO")) { //registramos usuario nuevo
@@ -45,10 +45,11 @@ public class ClienteHandler extends Thread{
 				if(autenticar(credenciales)) {
 					sendMessage("Usuario "+credenciales[0]+" autenticado correctamente", salida);
 					boolean seguir = true;
-					String archivo;
+					String archivo, accion;
 					while(seguir) {
+						
 						System.out.println("Esperando acción");
-						String accion = entrada.readLine();//1-se recibe opción
+						accion = entrada.readLine();//1-se recibe opción
 						while(true) {
 							if(accion.equals("1")) { //listar directorio
 								System.out.println("listando directorios..");
@@ -56,18 +57,19 @@ public class ClienteHandler extends Thread{
 								break;
 							}
 							else if(accion.equals("2")) { //recibir archivo
-								archivo = entrada.readLine(); //2-se recibe el nombre del archivo
-								System.out.println("obteniendo "+archivo+" ..");
-								String tam = entrada.readLine(); //3-recibo tamaño archivo
-								Integer sizeArchivo = Integer.parseInt(tam);
-								receiveFile(cliente, sizeArchivo, archivo); //4-recibo el archivo
+								System.out.println("El cliente ha elegido enviar un archivo");
+								System.out.println("Leyendo nombre..");
+								String nombre = dis.readUTF().toString(); //2-se recibe el nombre del archivo
+								System.out.println("Leyendo tamaño..");
+								int tam = dis.readInt(); //3-recibo tamaño archivo
+								receiveFile(cliente, tam, nombre); //4-recibo el archivo
 								break;
 							}
 							else if(accion.equals("3")) { //enviar archivo
-								sendMessage(listarDirectorio(), salida); //se envía la lista de archivos que hay 
+								sendMessage(listarDirectorio(), salida); //1.5-se envía la lista de archivos que hay 
 								archivo = entrada.readLine(); //2-recibo el nombre del archivo
 								System.out.println("Enviando el archivo "+archivo+" ..");
-								sendFile(cliente, archivo, salida);
+								sendFile(cliente, archivo);
 								break;
 							}
 							else { //salir
@@ -115,8 +117,75 @@ public class ClienteHandler extends Thread{
 	public boolean autenticar(String[] credenciales) {
 		return true;
 	}
-	public void sendFile(Socket cliente, String nombreArchivo, PrintStream salida) {
-		File fich = new File("/home/pablo/FTP/servidorFTP/"+nombreArchivo); //archivo a enviar
+	public void sendFile(Socket cliente, String nombreArchivo) {
+		File miArchivo = new File("/home/pablo/FTP/servidorFTP/" + nombreArchivo); // archivo a enviar
+		try(
+			FileInputStream fis = new FileInputStream("/home/pablo/FTP/servidorFTP/"+nombreArchivo);
+			BufferedInputStream bis = new BufferedInputStream(fis);){
+			DataOutputStream dout = new DataOutputStream(cliente.getOutputStream());
+			BufferedOutputStream bos = new BufferedOutputStream(cliente.getOutputStream());
+			//enviamos el nombre del archivo
+			//dout.writeUTF(miArchivo.getName());
+			//enviamos el tamaño del archivo
+			int tam = (int) miArchivo.length();
+			dout.writeInt(tam);
+			//enviamos el archivo
+			byte[] buffer = new byte[tam];
+			//leemos el archivo y lo introducimos en el array de bytes
+			bis.read(buffer);
+			//se realiza el envío
+			for(int i=0;i<buffer.length;i++) {
+				bos.write(buffer[i]);
+			}
+			bos.flush();
+			System.out.println("Archivo enviado: "+miArchivo.getName());
+		}catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void receiveFile(Socket cliente, Integer sizeArchivo, String nombreArchivo) {
+		try{
+			FileOutputStream fos = new FileOutputStream("/home/pablo/FTP/servidorFTP/"+nombreArchivo);
+			BufferedOutputStream out = new BufferedOutputStream(fos);
+			BufferedInputStream in = new BufferedInputStream(cliente.getInputStream());
+			byte[] buffer = new byte[sizeArchivo];
+			System.out.println("Leyendo contenido..");
+			for(int i=0;i<buffer.length;i++) {
+				buffer[i] = (byte) in.read();
+			}
+			System.out.println("Escribiendo el contenido..");
+			out.write(buffer);
+			out.flush();
+			System.out.println("Archivo recibido: "+nombreArchivo);
+			out.close();
+			fos.close();
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	//enviar mensaje a cliente
+	public void sendMessage(String mensaje, PrintStream salida) {
+		salida.println(mensaje);
+		salida.flush();
+	}
+}
+
+
+
+
+
+
+
+
+
+/* 
+ 
+ antiguo sendFile()
+ 
+ File fich = new File("/home/pablo/FTP/servidorFTP/"+nombreArchivo); //archivo a enviar
 		try(FileInputStream fis = new FileInputStream(fich);
 				BufferedInputStream bis = new BufferedInputStream(fis);OutputStream os = cliente.getOutputStream();){
 			byte[] miByteArray = new byte[(int) fich.length()];
@@ -128,30 +197,35 @@ public class ClienteHandler extends Thread{
 		}catch(IOException e) {
 			e.printStackTrace();
 		}
-	}
+ */
+
+
+
+
+
+
+
+
+
+
+
+//antiguo recibir archivo 
+/*
+try(FileOutputStream fos = new FileOutputStream("/home/pablo/FTP/servidorFTP/"+nombreArchivo);
+		BufferedOutputStream bos = new BufferedOutputStream(fos);InputStream is = cliente.getInputStream();){
 	
-	public void receiveFile(Socket cliente, Integer sizeArchivo, String nombreArchivo) {
-		try(FileOutputStream fos = new FileOutputStream("/home/pablo/FTP/servidorFTP/"+nombreArchivo);
-				BufferedOutputStream bos = new BufferedOutputStream(fos);InputStream is = cliente.getInputStream();){
-			byte[] miByteArray = new byte[sizeArchivo];
-			int bytesLeidos = is.read(miByteArray, 0, miByteArray.length);
-			int bytesTotales = bytesLeidos;
-			while(bytesTotales<sizeArchivo) {
-				bytesLeidos = is.read(miByteArray, bytesTotales, (miByteArray.length-bytesTotales));
-				if(bytesLeidos>=0)
-					bytesTotales += bytesLeidos;
-			}
-			bos.write(miByteArray, 0, bytesTotales); //4-recibo el archivo
-			bos.flush();
-			System.out.println("El archivo "+nombreArchivo+" se ha añadido correctamente.");
-		}catch(IOException e) {
-			e.printStackTrace();
-		}
+	byte[] miByteArray = new byte[sizeArchivo];
+	int bytesLeidos = is.read(miByteArray, 0, miByteArray.length);
+	int bytesTotales = bytesLeidos;
+	while(bytesTotales<sizeArchivo) {
+		bytesLeidos = is.read(miByteArray, bytesTotales, (miByteArray.length-bytesTotales));
+		if(bytesLeidos>=0)
+			bytesTotales += bytesLeidos;
 	}
-	
-	//enviar mensaje a cliente
-	public void sendMessage(String mensaje, PrintStream salida) {
-		salida.println(mensaje);
-		salida.flush();
-	}
+	bos.write(miByteArray, 0, bytesTotales); //4-recibo el archivo
+	bos.flush();
+	System.out.println("El archivo "+nombreArchivo+" se ha añadido correctamente.");
+}catch(IOException e) {
+	e.printStackTrace();
 }
+*/
