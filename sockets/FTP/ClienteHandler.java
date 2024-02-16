@@ -29,69 +29,85 @@ public class ClienteHandler extends Thread{
 	
 	public void run() {
 		try(InputStream is = cliente.getInputStream(); 
-				BufferedReader entrada = new BufferedReader(new InputStreamReader(is)); OutputStream os = cliente.getOutputStream();
-				PrintStream salida = new PrintStream(os);DataInputStream dis = new DataInputStream(cliente.getInputStream())){
+			BufferedReader entrada = new BufferedReader(new InputStreamReader(is)); 
+			OutputStream os = cliente.getOutputStream();
+			PrintStream salida = new PrintStream(os);){
+			
 			System.out.println("Cliente: "+direccion+" conectado");
-			String mensaje = entrada.readLine(); //0-recibo accion
-			if(mensaje.equals("REGISTRO")) { //registramos usuario nuevo
-				sendMessage("Vamos a registrar un nuevo usuario", salida); //1-envio mensaje
-				registrarUsuario(entrada, salida); //2-recibiré credenciales
-			}
-			else {  //accedemos al servidor con un usuario que ya existe
-				sendMessage("Vamos a hacer operaciones sobre el servidor FTP", salida);
-				String[] credenciales = (entrada.readLine()).split(" ");
-				
-				//si el usuario es correcto
-				if(autenticar(credenciales)) {
-					sendMessage("Usuario "+credenciales[0]+" autenticado correctamente", salida);
-					boolean seguir = true;
-					String archivo, accion;
-					while(seguir) {
-						
-						System.out.println("Esperando acción");
-						accion = entrada.readLine();//1-se recibe opción
-						while(true) {
-							if(accion.equals("1")) { //listar directorio
-								System.out.println("listando directorios..");
-								String lista = listarDirectorio();
-								DataOutputStream dos = new DataOutputStream(cliente.getOutputStream());
-								dos.writeUTF(lista);
-								dos.flush();
-								break;
+			String mensaje;
+			do {
+				mensaje = entrada.readLine(); //0-recibo accion
+				//REGISTRAR USUARIO
+				if(mensaje.equals("REGISTRO")) { 
+					System.out.println("El cliente ha elegido registrarse como usuario..");
+					sendMessage("Vamos a registrar un nuevo usuario", salida); //1-envio mensaje
+					registrarUsuario(entrada, salida); //2-recibiré credenciales
+				}
+				//ACCEDER AL SERVIDOR
+				else { 
+					System.out.println("El cliente ha elegido entrar al servidor FTP..");
+					sendMessage("Vamos a hacer operaciones sobre el servidor FTP", salida);
+					String[] credenciales = (entrada.readLine()).split(" ");
+					
+					//USUARIO INCORRECTO
+					if(!autenticar(credenciales)) {
+						System.out.println("El cliente no se ha podido autenticar correctamente..");
+						sendMessage("El usuario "+credenciales[0]+" no existe", salida);
+					}
+					
+					//USUARIO CORRECTO
+					else {
+						System.out.println("El cliente se ha autenticado correctamente..");
+						sendMessage("Usuario "+credenciales[0]+" autenticado correctamente", salida);
+						boolean seguir = true;
+						String archivo, accion;
+						while(seguir) {
+							System.out.println("Esperando acción");
+							accion = entrada.readLine();//1-se recibe opción general
+							while(true) {
+								if(accion.equals("1")) { //listar directorio
+									System.out.println("listando directorios..");
+									String lista = listarDirectorio();
+									DataOutputStream dos = new DataOutputStream(cliente.getOutputStream());
+									dos.writeUTF(lista);
+									dos.flush();
+									break;
+								}
+								else if(accion.equals("2")) { //recibir archivo
+									System.out.println("El cliente ha elegido subir un archivo..");
+									DataInputStream dis = new DataInputStream(cliente.getInputStream());
+									System.out.println("Leyendo nombre..");
+									String nombre = dis.readUTF().toString(); //2-se recibe el nombre del archivo
+									System.out.println("Leyendo tamaño..");
+									int tam = dis.readInt(); //3-recibo tamaño archivo
+									receiveFile(cliente, tam, nombre); //4-recibo el archivo
+									break;
+								}
+								else if(accion.equals("3")) { //enviar archivo
+									System.out.println("El cliente ha elegido bajar un archivo..");
+									System.out.println("Enviando lista de archivos..");
+									String lista = listarDirectorio();
+									DataOutputStream dos = new DataOutputStream(cliente.getOutputStream()); //1.5 envio la lista de archivos
+									dos.writeUTF(lista);
+									dos.flush();
+									archivo = entrada.readLine(); //2-recibo el nombre del archivo
+									System.out.println("Enviando el archivo "+archivo+" ..");
+									sendFile(cliente, archivo);
+									break;
+								}
+								else { //salir
+									seguir = false;
+									System.out.println("Saliendo del servidor FTP..");
+									break;
+								}
+									
 							}
-							else if(accion.equals("2")) { //recibir archivo
-								System.out.println("El cliente ha elegido subir un archivo");
-								System.out.println("Leyendo nombre..");
-								String nombre = dis.readUTF().toString(); //2-se recibe el nombre del archivo
-								System.out.println("Leyendo tamaño..");
-								int tam = dis.readInt(); //3-recibo tamaño archivo
-								receiveFile(cliente, tam, nombre); //4-recibo el archivo
-								break;
-							}
-							else if(accion.equals("3")) { //enviar archivo
-								System.out.println("El cliente ha elegido bajar un archivo");
-								System.out.println("Enviando lista de archivos..");
-								String lista = listarDirectorio();
-								DataOutputStream dos = new DataOutputStream(cliente.getOutputStream()); //1.5 envio la lista de archivos
-								dos.writeUTF(lista);
-								dos.flush();
-								archivo = entrada.readLine(); //2-recibo el nombre del archivo
-								System.out.println("Enviando el archivo "+archivo+" ..");
-								sendFile(cliente, archivo);
-								break;
-							}
-							else { //salir
-								seguir = false;
-								System.out.println("Saliendo del servidor FTP..");
-								break;
-							}
-								
 						}
 					}
 				}
-				else
-					sendMessage("El usuario "+credenciales[0]+" no existe", salida);
-			}
+				
+			}while(!mensaje.equals("SALIR"));
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
