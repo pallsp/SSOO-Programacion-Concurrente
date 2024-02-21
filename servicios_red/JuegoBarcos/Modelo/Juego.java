@@ -10,6 +10,8 @@ public class Juego {
 	private Boolean jug1;
 	private Boolean jug2;
 	private Integer[] posicionMarcada;
+	private Boolean jugadaAcertada;
+	private String posiciones3;
 	
 	//Juego(dimension, numeroBarcos)
 	public Juego(Integer n, Integer numBarcos) {
@@ -24,14 +26,45 @@ public class Juego {
 		generatePosicionesI();
 		generatePosicionesD();
 	}
+	public void setPosiciones3(String p) {
+		this.posiciones3 = p;
+	}
+	
+	public String getPosiciones3() {
+		return posiciones3;
+	}
+	public void setJugadaAcertada(Boolean b) {
+		this.jugadaAcertada = b;
+	}
+	
+	public synchronized Boolean getJugadaAcertada() {
+		while(jugadaAcertada == null) {
+			try {
+				wait();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		return jugadaAcertada;
+	}
 	
 	public synchronized void setPosicionMarcada(int i, int j) {
 		this.posicionMarcada[0] = i;
 		this.posicionMarcada[1] = j;
+		//notifyAll();
 	}
 	
 	public synchronized Integer[] getPosicionMarcada() {
-		return this.posicionMarcada;
+		/*
+		 while(posicionMarcada == null) {
+			try {
+				wait();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		 */
+		return posicionMarcada;
 	}
 	
 	public synchronized void startPartida() {
@@ -129,11 +162,14 @@ public class Juego {
 	
 	//le paso las coordenadas y el jugador: 0 -> tablero I, 1 -> tablero D
 	//devuelve true si ha acertado y false si ha fallado
-	public Boolean updatePosiciones(int i, int j, int jug) {
+	public synchronized Boolean updatePosiciones(int i, int j, int jug) {
+		setPosicionMarcada(i,j);
 		if(jug == 0) { //tablero I
 			for(Integer[] par: posicionesI) {
 				if((par[0] == i) && (par[1] == j)) {
 					posicionesI.remove(par);
+					this.jugadaAcertada = true;
+					notifyAll();
 					return true;
 				}
 			}
@@ -142,10 +178,14 @@ public class Juego {
 			for(Integer[] par: posicionesD) {
 				if((par[0] == i) && (par[1] == j)) {
 					posicionesD.remove(par);
+					this.jugadaAcertada = true;
+					notifyAll();
 					return true;
 				}
 			}
 		}
+		this.jugadaAcertada = false;
+		notifyAll();
 		return false;
 	}
 	

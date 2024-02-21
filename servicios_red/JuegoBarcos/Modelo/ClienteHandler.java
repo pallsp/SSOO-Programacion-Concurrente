@@ -71,16 +71,21 @@ public class ClienteHandler extends Thread{
 					
 					//4-recibo posicion marcada por el jugador, que será de la forma -> x,y
 					posiciones = flujoEntrada.readUTF(); 
-					j.setPosicionMarcada(Integer.parseInt(posiciones.split(",")[0]), 
-							Integer.parseInt(posiciones.split(",")[1]));
-					System.out.println(posiciones);
+					//j.setPosicionMarcada(Integer.parseInt(posiciones.split(",")[0]), Integer.parseInt(posiciones.split(",")[1]));
+					System.out.println("Posicion marcada por el rival: "+ posiciones);
 					
-					//actualizo las posiciones CUIDADO QUE NO ME DÉ PROBLEMAS QUE SEAN DOS LINEAS CADA BLOQUE DEL CONDICIONAL					
+					//actualizo las posiciones 				
 					acertado = j.updatePosiciones(Integer.parseInt(posiciones.split(",")[0]), 
 								Integer.parseInt(posiciones.split(",")[1]), nCliente);
 					
 					//5-envío si ha acertado la posición
 					flujoSalida.writeBoolean(acertado);
+					flujoSalida.flush();
+					System.out.println("Posicion que marca el rival 2222222: "+posiciones);
+					j.setPosiciones3(posiciones);
+					
+					//6-envío la posición
+					flujoSalida.writeUTF(posiciones);
 					flujoSalida.flush();
 					
 					j.nextMovimiento();
@@ -90,15 +95,36 @@ public class ClienteHandler extends Thread{
 					//3-envío si te toca jugar (espera)
 					flujoSalida.writeBoolean(false);
 					flujoSalida.flush();
-					Integer[] posicionRival = j.getPosicionMarcada();
-					String posicionDisparada = posicionRival[0]+","+posicionRival[1]; 
-					//3-envío posición a la que dispara el rival
+					//Integer[] posicionRival = j.getPosicionMarcada();
+					//String posicionDisparada = posicionRival[0]+","+posicionRival[1]; 
+					
+					//4-envío si el rival ha acertado
+					flujoSalida.writeBoolean(j.getJugadaAcertada());
+					flujoSalida.flush();
+										
+					String p = j.getPosiciones3();
+					while(p == null) {
+						System.out.println("Es nulo, vamos a esperar");
+						try {
+							Thread.sleep(100);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						p = j.getPosiciones3();
+						System.out.println("probamos de nuevo");
+					}
+					String posicionDisparada = p;
+					
+					//5-envío posición a la que dispara el rival
+					System.out.println("Posición marcada que envío: "+posicionDisparada);
 					flujoSalida.writeUTF(posicionDisparada);
 					flujoSalida.flush();
 				}
 				
 				n = j.getStatus();
-				System.out.println(n);
+				System.out.println("Estado del juego: [0 - SIGUE 1- GANA JUGADOR 1 2- GANA JUGADOR 2]"+n);
+				if(!(nCliente == (j.getMovimiento()%2)))
+					j.setJugadaAcertada(null);
 				
 				//6-envío el estado del juego
 				flujoSalida.writeInt(n);
@@ -119,7 +145,7 @@ public class ClienteHandler extends Thread{
 		String mensaje = "";
 		for(Integer[] par: pos) {
 			if(!pos.get(pos.size()-1).equals(par))
-				mensaje += par[0]+","+par[1]+" - ";
+				mensaje += par[0]+","+par[1]+"-";
 			else
 				mensaje += par[0]+","+par[1];
 		}
